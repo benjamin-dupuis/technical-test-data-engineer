@@ -6,12 +6,12 @@ from typing import Any, Dict
 import duckdb
 import polars as pl
 import requests
-from api_endpoints import APIEndpoints
-from data_zone_config import RawZoneConfig
+from src.data_pipeline.api_endpoints import APIEndpoints
+from src.data_pipeline.data_zone_config import RawZoneConfig, DEFAULT_DATA_CONFIG
 from deltalake import DeltaTable
 from polars import DataFrame
 
-DEFAULT_DATA_CONFIG = Path(__file__).parent / "config_files/local_config.json"
+
 
 
 class DataPipelineBase(ABC):
@@ -89,7 +89,6 @@ class DataPipelineBase(ABC):
             )
             create_raw_table_statement = self.sql_query_from_file(sql_file_path)
             con.sql(create_raw_table_statement)
-            con.table(self._table_name).show()
 
     def sql_query_from_file(self, sql_file_path: Path) -> str:
         with open(sql_file_path, "r") as f:

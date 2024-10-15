@@ -192,3 +192,5 @@ cython_debug/
 #.idea/
 
 *.db
+test/tests_data/*
+.idea/

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_BASE_DATA_PATH = Path.home() / "data"
+DEFAULT_DATA_CONFIG = Path(__file__).parent / "config_files/local_config.json"
 DEFAULT_API_PAGE_SIZE = 100
 DEFAULT_MAX_DURATION_S = 600  # 10 minutes
 
