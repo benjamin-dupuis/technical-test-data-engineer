@@ -1,6 +1,5 @@
-from data_pipeline_base import DataPipelineBase
-from data_pipeline_base import DataPipelineBase
 from api_endpoints import APIEndpoints
+from data_pipeline_base import DataPipelineBase
 
 
 class TracksDataPipeline(DataPipelineBase):

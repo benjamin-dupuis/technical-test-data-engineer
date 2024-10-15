@@ -1,7 +1,8 @@
-from data_pipeline_base import DataPipelineBase
+import polars as pl
 from api_endpoints import APIEndpoints
-from polars import DataFrame, col, concat
+from data_pipeline_base import DataPipelineBase
 from deltalake import DeltaTable
+from polars import DataFrame
 
 
 class ListenHistoryDataPipeline(DataPipelineBase):
@@ -21,22 +22,28 @@ class ListenHistoryDataPipeline(DataPipelineBase):
         if not DeltaTable.is_deltatable(self.data_path):
             df.write_delta(self.data_path)
         else:
-            (
-                df.write_delta(
-                    self.data_path,
-                    mode="merge",
-                    delta_merge_options={
-                        "predicate": f"s.{self.merge_predicate} = t.{self.merge_predicate}",
-                        "source_alias": "s",
-                        "target_alias": "t",
-                    },
-                )
-                .when_not_matched_insert_all()
-                .when_matched_update(
-                    updates={"items": concat(col("s.items"), col("t.items"))}
-                )
-                .execute()
+            delta_df = pl.read_delta(self.data_path)
+            df = df.rename({col: f"s.{col}" for col in df.columns})
+            delta_df = delta_df.rename({col: f"t.{col}" for col in delta_df.columns})
+
+            merged_df = delta_df.join(
+                df, left_on=f"t.{self.merge_predicate}", right_on=f"s.{self.merge_predicate}", how="left"
             )
+
+            merged_df = (
+                merged_df.with_columns(
+                    [
+                        pl.when(pl.col("s.items").is_not_null())
+                        .then(pl.concat_list([pl.col("t.items"), pl.col("s.items")]))
+                        .otherwise(pl.col("t.items"))
+                        .alias("items")
+                    ]
+                )
+                .select([col for col in delta_df.columns])
+                .rename({col: col.replace("t.", "") for col in delta_df.columns})
+            )
+
+        merged_df.write_delta(self.data_path, mode="overwrite")
 
 
 if __name__ == "__main__":

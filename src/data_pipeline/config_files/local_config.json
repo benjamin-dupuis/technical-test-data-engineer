@@ -1,5 +1,6 @@
 {
     "base_api_url": "http://localhost:8000",
     "data_path": "",
-    "sql_files_folder": "duckdb_sql_files"
+    "sql_files_folder_name": "duckdb_sql_files",
+    "max_duration_s": 600
 }
