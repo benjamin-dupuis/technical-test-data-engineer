@@ -9,7 +9,6 @@ class DataZoneConfig:
     base_data_path: str
     base_api_url: str
     database_name: str
-    bucket_name: str
 
     @classmethod
     def from_config_file(cls, config_file: Path):
@@ -19,7 +18,10 @@ class DataZoneConfig:
             base_data_path=config_obj.get("base_data_path", Path.home() / "data"),
             base_api_url=config_obj.get("base_api_url"),
             database_name=config_obj.get("database_name", "raw_zone"),
-            bucket_name=config_obj.get("bucket_name", ""),
         )
+
+    @property
+    def database_path(self) -> str:
+        return f"{self.base_data_path}/{self.database_name}.db"
 
 

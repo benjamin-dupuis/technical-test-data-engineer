@@ -20,15 +20,7 @@ class UsersDataPipeline(DataPipelineBase):
         
     @property
     def merge_predicate(self) -> str:
-        return "id"
-    
-    def create_tables(self) -> None:
-        with duckdb.connect(f"{self._raw_zone_config.base_data_path}.db") as con:
-            create_raw_table_statement = self.sql_query_from_file()
-            con.sql(create_raw_table_statement)
-            con.table(self._table_name).show()
-        
-
+        return "id"     
 
 
 if __name__ == "__main__":

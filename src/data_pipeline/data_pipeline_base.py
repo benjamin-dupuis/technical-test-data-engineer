@@ -9,7 +9,7 @@ from pathlib import Path
 import duckdb
 from data_zone_config import DataZoneConfig
 
-DEFAULT_DATA_CONFIG = Path(__file__).parent / "local_config.json"
+DEFAULT_DATA_CONFIG = Path(__file__).parent / "config_files/local_config.json"
 
 
 class DataPipelineBase(ABC):
@@ -43,36 +43,43 @@ class DataPipelineBase(ABC):
     def merge_predicate(self) -> str:
         pass
 
+    def write_to_delta_table(self, df: DataFrame) -> None:
+        if not DeltaTable.is_deltatable(self.data_path):
+            df.write_delta(self.data_path)
+        else:
+            (
+                df.write_delta(
+                self.data_path,
+                mode="merge",
+                delta_merge_options={
+            "predicate": f"s.{self.merge_predicate} = t.{self.merge_predicate}",
+            "source_alias": "s",
+            "target_alias": "t",
+        }
+                )
+                .when_not_matched_insert_all()
+                .when_matched_update_all()
+                .execute()
+                )
+
     def load_raw(self) -> None:
         try:
-            response = requests.get(self.endpoint_url)
-            data: Dict[str, Any] = response.json()
-            df: DataFrame = pl.DataFrame(data=data["items"])
-            if not DeltaTable.is_deltatable(self.data_path):
-                df.write_delta(self.data_path)
-            else:
-                (
-                    df.write_delta(
-                    self.data_path,
-                    mode="merge",
-                    delta_merge_options={
-                "predicate": f"s.{self.merge_predicate} = t.{self.merge_predicate}",
-                "source_alias": "s",
-                "target_alias": "t",
-            }
-                    )
-                    .when_not_matched_insert_all()
-                    .when_matched_update_all()
-                    .execute()
-                    )
-        
+            df = self._generate_dataframe_from_response()
+            print(self.data_path)
+            self.write_to_delta_table(df)
+
         except Exception as e:
             print(e)
 
 
-    @abstractmethod
-    def create_tables() -> None:
-        pass
+    def create_tables(self) -> None:
+        delta_table = DeltaTable(self.data_path)
+        print("Schema:  ")
+        print(delta_table.schema())
+        with duckdb.connect(self._raw_zone_config.database_path) as con:
+            create_raw_table_statement = self.sql_query_from_file()
+            con.sql(create_raw_table_statement)    
+            con.table(self._table_name).show()
 
     def sql_query_from_file(self) -> str:
         sql_file_path = Path(__file__).parent / f"sql_files/{self.sql_file_name}"
@@ -81,3 +88,12 @@ class DataPipelineBase(ABC):
 
         sql_query = base_sql_query.replace("{table_name}", self._table_name).replace("{data_path}", self.data_path)
         return sql_query
+
+    def _generate_dataframe_from_response(self) -> DataFrame:
+        try:
+            response = requests.get(self.endpoint_url)
+            data: Dict[str, Any] = response.json()
+            return pl.DataFrame(data=data["items"])
+        except Exception as e:
+            print(e)
+

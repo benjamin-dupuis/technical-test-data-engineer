@@ -1,10 +1,30 @@
 from src.data_pipeline.data_pipeline_base import DataPipelineBase
+from data_pipeline_base import DataPipelineBase
+from api_endpoints import APIEndpoints, DEFAULT_URL
+import requests
+import polars as pl
+from polars import DataFrame
+from deltalake import DeltaTable
+from typing import Dict, Any
+import duckdb
 
 
 class TracksDataPipeline(DataPipelineBase):
 
     def __init__(self, table_name: str) -> None:
-        super().__init__(table_name)
-    
-    def load_raw() -> None:
-        pass
+        self._api_endpoint = APIEndpoints.TRACKS
+        super().__init__(table_name, self._api_endpoint)
+
+    @property
+    def sql_file_name(self) -> str:
+        return "tracks.sql"
+        
+    @property
+    def merge_predicate(self) -> str:
+        return "id"     
+
+
+if __name__ == "__main__":
+    table_name = APIEndpoints.TRACKS.value
+    pipeline = TracksDataPipeline(table_name=table_name)
+    pipeline.run()

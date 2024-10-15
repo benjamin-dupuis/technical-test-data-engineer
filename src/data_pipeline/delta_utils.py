@@ -1,2 +1,0 @@
-from deltalake import DeltaTable
-
