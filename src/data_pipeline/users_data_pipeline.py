@@ -1,15 +1,8 @@
 from data_pipeline_base import DataPipelineBase
-from api_endpoints import APIEndpoints, DEFAULT_URL
-import requests
-import polars as pl
-from polars import DataFrame
-from deltalake import DeltaTable
-from typing import Dict, Any
-import duckdb
+from api_endpoints import APIEndpoints
 
 
 class UsersDataPipeline(DataPipelineBase):
-
     def __init__(self, table_name: str) -> None:
         self._api_endpoint = APIEndpoints.USERS
         super().__init__(table_name, self._api_endpoint)
@@ -17,10 +10,10 @@ class UsersDataPipeline(DataPipelineBase):
     @property
     def sql_file_name(self) -> str:
         return "users.sql"
-        
+
     @property
     def merge_predicate(self) -> str:
-        return "id"     
+        return "id"
 
 
 if __name__ == "__main__":

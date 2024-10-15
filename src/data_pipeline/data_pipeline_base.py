@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from api_endpoints import APIEndpoints, DEFAULT_URL
+from api_endpoints import APIEndpoints
 import requests
 import polars as pl
 from polars import DataFrame
@@ -65,7 +65,6 @@ class DataPipelineBase(ABC):
     def load_raw(self) -> None:
         try:
             df = self._generate_dataframe_from_response()
-            print(self.data_path)
             self.write_to_delta_table(df)
 
         except Exception as e:
@@ -82,7 +81,7 @@ class DataPipelineBase(ABC):
             con.table(self._table_name).show()
 
     def sql_query_from_file(self) -> str:
-        sql_file_path = Path(__file__).parent / f"sql_files/{self.sql_file_name}"
+        sql_file_path = Path(__file__).parent / f"{self._raw_zone_config.sql_files_folder_name}/{self.sql_file_name}"
         with open(sql_file_path, "r") as f:
             base_sql_query = f.read()
 
