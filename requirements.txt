@@ -3,3 +3,8 @@ fastapi
 uvicorn
 fastapi_pagination
 pytest
+polars
+ruff
+deltalake
+requests
+duckdb
