@@ -18,7 +18,6 @@ class DataZoneConfig:
     max_duration_s: int
     zone_name: str
     database_name: str
-    sql_files_folder_name: str
 
     @classmethod
     def from_config_file(cls, config_file: Path):
@@ -30,13 +29,8 @@ class DataZoneConfig:
             api_page_size=config_obj.get("api_page_size", DEFAULT_API_PAGE_SIZE),
             max_duration_s=config_obj.get("max_duration_s", DEFAULT_MAX_DURATION_S),
             zone_name=cls.zone_name,
-            database_name=cls.database_name,
-            sql_files_folder_name=config_obj.get("sql_files_folder_name"),
+            database_name=cls.database_name
         )
-
-    @property
-    def database_path(self) -> str:
-        return f"{self.base_data_path}/{self.zone_name}/{self.database_name}.db"
 
     @property
     def data_path(self) -> str:

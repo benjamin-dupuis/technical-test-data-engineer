@@ -9,3 +9,4 @@ deltalake
 requests
 duckdb
 mock
+mypy

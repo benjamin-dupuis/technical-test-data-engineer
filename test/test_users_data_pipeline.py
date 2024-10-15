@@ -1,19 +1,20 @@
+from copy import deepcopy
 from unittest import TestCase
 from mock import patch
 from src.data_pipeline.users_data_pipeline import UsersDataPipeline
 from src.data_pipeline.data_pipeline_base import DataPipelineBase
 from typing import Any, Dict
+
 from pathlib import Path
 import polars as pl
 from unittest.mock import Mock, patch
+from test.utils import delete_test_data
 import json
 import shutil
 from time import sleep
-from test.utils import DataPipelineBaseTestClass
 
-class TestTracksDataPipeline(DataPipelineBaseTestClass):
 
-    _users_fake_response = {
+USERS_FAKE_RESPONSE = {
   "items": [
     {
       "id": 52903,
@@ -52,40 +53,57 @@ class TestTracksDataPipeline(DataPipelineBaseTestClass):
   "pages": 1
 }
 
-    _users_columns = list(_users_fake_response["items"][0].keys())
+_data_config_path = Path(__file__).parent / "test_data_config.json"
+_users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())
+
+
+class TestUsersDataPipeline(TestCase):
+    _users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())
+    _dummy_table = "users_dummy_table"
+    _data_config_path = Path(__file__).parent / "test_data_config.json"
+
+    def setUp(self):
+        self.users_pipeline = UsersDataPipeline(self._dummy_table, self._data_config_path)
+
+    def tearDown(self):
+        delete_test_data(Path(self.users_pipeline._raw_zone_config.base_data_path))
 
 
     def test_loading_into_delta_table(self) -> None:
-        with patch.object(DataPipelineBase, "_get_response_data_from_api", self._get_api_response_mock):
-            with patch.object(DataPipelineBase, "create_tables", self._create_tables_mock):
-                tracks_user_pipeline = UsersDataPipeline(self._dummy_table, self._data_config_path)
-                tracks_user_pipeline.run()
+        with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_response_mock:
+            get_response_mock.return_value = USERS_FAKE_RESPONSE
 
-                delta_table = pl.read_delta(tracks_user_pipeline.data_path)
-                self.assertEqual(list(delta_table.columns), self._users_columns)
-                self.assertEqual(len(delta_table), 3)
+            self.users_pipeline.run()
+
+            delta_table = pl.read_delta(self.users_pipeline.data_path)
+            self.assertEqual(list(delta_table.columns), self._users_columns)
+            self.assertEqual(len(delta_table), 3)
+
+
+
 
     def test_incremental_load(self) -> None:
-        with patch.object(DataPipelineBase, "_get_response_data_from_api", self._get_api_response_mock):
-            with patch.object(DataPipelineBase, "create_tables", self._create_tables_mock):
-                tracks_user_pipeline = UsersDataPipeline(self._dummy_table, self._data_config_path)
-                tracks_user_pipeline.run()
+        with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_response_mock:
+                get_response_mock.return_value = USERS_FAKE_RESPONSE
 
-                delta_table = pl.read_delta(tracks_user_pipeline.data_path)
+                self.users_pipeline.run()
+
+                delta_table = pl.read_delta(self.users_pipeline.data_path)
                 initial_count_expected = 3
                 self.assertEqual(len(delta_table), initial_count_expected)
 
 
-                self._add_user()
-                tracks_user_pipeline.run()
-                delta_table = pl.read_delta(tracks_user_pipeline.data_path)
+                get_response_mock.return_value = self._add_user()
+                self.users_pipeline.run()
+                delta_table = pl.read_delta(self.users_pipeline.data_path)
                 self.assertEqual(len(delta_table), initial_count_expected + 1)
 
 
-    def _get_api_response_mock(self, page: int = 1) -> Dict[str, Any]:
-        return self._users_fake_response
+    @staticmethod
+    def _add_user() -> Dict[str, Any]:
 
-    def _add_user(self):
+        fake_user_response = deepcopy(USERS_FAKE_RESPONSE)
+
         new_user = {
       "id": 50488,
       "first_name": "Christopher",
@@ -97,9 +115,11 @@ class TestTracksDataPipeline(DataPipelineBaseTestClass):
       "updated_at": "2023-12-10T07:55:50"
     }
 
-        self._users_fake_response["items"].append(new_user)
-        self._users_fake_response["total"] += 1
-        self._users_fake_response["size"] += 1
+        fake_user_response["items"].append(new_user)
+        fake_user_response["total"] += 1
+        fake_user_response["size"] += 1
+
+        return fake_user_response
 
 
 
