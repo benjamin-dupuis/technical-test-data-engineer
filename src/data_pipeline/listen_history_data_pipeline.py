@@ -1,14 +1,16 @@
 import polars as pl
-from api_endpoints import APIEndpoints
-from data_pipeline_base import DataPipelineBase
+from src.data_pipeline.api_endpoints import APIEndpoints
+from src.data_pipeline.data_pipeline_base import DataPipelineBase
 from deltalake import DeltaTable
 from polars import DataFrame
+from pathlib import Path
+from src.data_pipeline.data_zone_config import DEFAULT_DATA_CONFIG
 
 
 class ListenHistoryDataPipeline(DataPipelineBase):
-    def __init__(self, table_name: str) -> None:
+    def __init__(self, table_name: str, data_config_file: Path = DEFAULT_DATA_CONFIG) -> None:
         self._api_endpoint = APIEndpoints.LISTEN_HISTORY
-        super().__init__(table_name, self._api_endpoint)
+        super().__init__(table_name, self._api_endpoint, data_config_file)
 
     @property
     def sql_file_name(self) -> str:
@@ -30,20 +32,29 @@ class ListenHistoryDataPipeline(DataPipelineBase):
                 df, left_on=f"t.{self.merge_predicate}", right_on=f"s.{self.merge_predicate}", how="left"
             )
 
+
             merged_df = (
                 merged_df.with_columns(
                     [
                         pl.when(pl.col("s.items").is_not_null())
-                        .then(pl.concat_list([pl.col("t.items"), pl.col("s.items")]))
+                        .then(pl.concat_list([pl.col("t.items"), pl.col("s.items")]).list.unique())
                         .otherwise(pl.col("t.items"))
                         .alias("items")
                     ]
                 )
-                .select([col for col in delta_df.columns])
-                .rename({col: col.replace("t.", "") for col in delta_df.columns})
-            )
 
-        merged_df.write_delta(self.data_path, mode="overwrite")
+                .select(["items"] + [col for col in delta_df.columns if col != "t.items"])
+                .rename({col: col.replace("t.", "") for col in delta_df.columns if col != "t.items"})
+            )
+            print("NEW")
+            print(df)
+            print("TARGET")
+            print(delta_df)
+
+            print("MERGED")
+            print(merged_df)
+
+            merged_df.write_delta(self.data_path, mode="overwrite")
 
 
 if __name__ == "__main__":

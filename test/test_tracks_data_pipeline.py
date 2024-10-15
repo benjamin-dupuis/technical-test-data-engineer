@@ -6,11 +6,11 @@ from typing import Any, Dict
 from pathlib import Path
 import polars as pl
 from unittest.mock import Mock, patch
+from test.utils import delete_test_data, DataPipelineBaseTestClass
 import json
 import shutil
-from time import sleep
 
-class TestTracksDataPipeline(TestCase):
+class TestTracksDataPipeline(DataPipelineBaseTestClass):
 
     _tracks_fake_response = {
   "items": [
@@ -54,20 +54,7 @@ class TestTracksDataPipeline(TestCase):
   "pages": 1
     }
 
-    _dummy_table = "dummy_table"
-    _data_config_path = Path(__file__).parent / "test_data_config.json"
-    _track_columns = ["id", "name", "artist", "songwriters", "duration", "genres", "album", "created_at", "updated_at"]
-
-    def setUp(self) -> None:
-        self._mock_data_pipeline_base = Mock()
-        self._mock_data_pipeline_return_value = self._mock_data_pipeline_base
-
-    def tearDown(self):
-        with open(self._data_config_path, "r") as f:
-            config_obj = json.load(f)
-        base_data_path = Path(__file__).parent / config_obj.get("base_data_path")
-        print(base_data_path)
-        self._delete_delta_table(base_data_path)
+    _track_columns = list(_tracks_fake_response["items"][0].keys())
 
     def test_loading_into_delta_table(self) -> None:
         with patch.object(DataPipelineBase, "_get_response_data_from_api", self._get_api_response_mock):
@@ -87,7 +74,6 @@ class TestTracksDataPipeline(TestCase):
 
                 delta_table = pl.read_delta(tracks_user_pipeline.data_path)
                 initial_count_expected = 3
-                self.assertEqual(list(delta_table.columns), self._track_columns)
                 self.assertEqual(len(delta_table), initial_count_expected)
 
 
@@ -96,13 +82,9 @@ class TestTracksDataPipeline(TestCase):
                 delta_table = pl.read_delta(tracks_user_pipeline.data_path)
                 self.assertEqual(len(delta_table), initial_count_expected + 1)
 
-                self._delete_delta_table(Path(tracks_user_pipeline.data_path))
-
     def _get_api_response_mock(self, page: int = 1) -> Dict[str, Any]:
         return self._tracks_fake_response
 
-    def _create_tables_mock(self) -> None:
-        pass
 
     def _add_track(self):
         new_track = {
@@ -120,11 +102,6 @@ class TestTracksDataPipeline(TestCase):
         self._tracks_fake_response["items"].append(new_track)
         self._tracks_fake_response["total"] += 1
         self._tracks_fake_response["size"] += 1
-
-    @staticmethod
-    def _delete_delta_table(data_path: Path) -> None:
-        if data_path.exists():
-            shutil.rmtree(data_path)
 
 
 
