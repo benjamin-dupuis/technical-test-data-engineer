@@ -42,6 +42,9 @@ class TestListenHistoryDataPipeline(TestCase):
     _listen_history_columns = list(LISTEN_HISTORY_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "listen_history_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
+    _listen_history_schema = pl.Schema({'user_id': pl.Int64, 'items': pl.List(pl.Int64),
+                                        'created_at': pl.Datetime(time_unit='us', time_zone=None),
+                                        'updated_at': pl.Datetime(time_unit='us', time_zone=None)})
 
     def setUp(self) -> None:
         self.listen_history_pipeline = ListenHistoryDataPipeline(self._dummy_table, self._data_config_path)
@@ -56,6 +59,7 @@ class TestListenHistoryDataPipeline(TestCase):
 
             delta_table = pl.read_delta(self.listen_history_pipeline.data_path)
             self.assertEqual(list(delta_table.columns), self._listen_history_columns)
+            self.assertEqual(delta_table.schema, self._listen_history_schema)
             self.assertEqual(len(delta_table), len(LISTEN_HISTORY_FAKE_RESPONSE["items"]))
 
     def test_adding_history_for_user(self) -> None:

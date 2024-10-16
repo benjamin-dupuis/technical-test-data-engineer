@@ -57,6 +57,12 @@ class TestTracksDataPipeline(TestCase):
     _track_columns = list(TRACKS_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "tracks_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
+    _tracks_schema = pl.Schema({'id': pl.Int64, 'name': pl.String,
+                                'artist': pl.String, 'songwriters': pl.String,
+                                'duration': pl.String, 'genres': pl.String,
+                                'album': pl.String,
+                                'created_at': pl.Datetime(time_unit='us', time_zone=None),
+                                'updated_at': pl.Datetime(time_unit='us', time_zone=None)})
 
     def setUp(self) -> None:
         self.tracks_user_pipeline = TracksDataPipeline(self._dummy_table, self._data_config_path)
@@ -71,6 +77,7 @@ class TestTracksDataPipeline(TestCase):
 
             delta_table = pl.read_delta(self.tracks_user_pipeline.data_path)
             self.assertEqual(list(delta_table.columns), self._track_columns)
+            self.assertEqual(delta_table.schema, self._tracks_schema)
             self.assertEqual(len(delta_table), len(TRACKS_FAKE_RESPONSE["items"]))
 
     def test_incremental_load(self) -> None:

@@ -56,6 +56,11 @@ class TestUsersDataPipeline(TestCase):
     _users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "users_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
+    _users_schema = pl.Schema({'id': pl.Int64, 'first_name': pl.String,
+                               'last_name': pl.String, 'email': pl.String,
+                               'gender': pl.String, 'favorite_genres': pl.String,
+                               'created_at': pl.Datetime(time_unit='us', time_zone=None),
+                               'updated_at': pl.Datetime(time_unit='us', time_zone=None)})
 
     def setUp(self) -> None:
         self.users_pipeline = UsersDataPipeline(self._dummy_table, self._data_config_path)
@@ -71,6 +76,7 @@ class TestUsersDataPipeline(TestCase):
 
             delta_table = pl.read_delta(self.users_pipeline.data_path)
             self.assertEqual(list(delta_table.columns), self._users_columns)
+            self.assertEqual(delta_table.schema, self._users_schema)
             self.assertEqual(len(delta_table), 3)
 
     def test_incremental_load(self) -> None:
