@@ -39,8 +39,8 @@ La raison de déployer les pipelines séparémment est le fait de ne pas être c
 De plus, cela permet d'ajuster la taille des machines selon la taille des requêtes pour chacun des endpoints. Cela permet aussi d'ajuster l'horaire de chacun des pipelines séparément.
 
 Finalement, je conseille de déployer le tout dans Databricks, car cela permet d'avoir accès à une panoplie de fonctionalités, comme les Delta Live Tables, Databricks SQL, Unity Catalog, etc.
-Si Databricks n'est pas disponible pour le client, alors je recommenderais de déployer chacun des piplines dans une fonctions serveless séparée, comme AWS Lambda. 
-Pour ce faire, le code du projet doit d'abord être conteneurisé dans une image Docker, puis déployer dans AWS ECR via une Github Action. Une fois fait, chacune des fonctions Lambda peut obtenir son code à partir du script Python associée.
+Si Databricks n'est pas disponible pour le client, alors je recommenderais de déployer chacun des pipelines dans une fonction serverless séparée, comme AWS Lambda. 
+Pour ce faire, le code du projet doit d'abord être conteneurisé dans une image Docker, puis automatiquement déployé dans AWS ECR via une Github Action. Une fois fait, chacune des fonctions Lambda peut obtenir son code à partir du script Python associé.
 
 
 ![img.png](deployment.png)
@@ -157,10 +157,10 @@ Pour l'alertage, je recommenderais d'utiliser le Unity Catalog, qui permet la co
 
 Pour automatiser le calcul des recommendations, il faut d'abord donner un horaire (avec _EventBridgeScheduler_ par exemple) à chacun des data pipeline afin d'avoir toujours les données les plus récentes provenant de l'API. 
 
-Ensuite, les tables de la Consumption Zone peuvent être automatiquement créée par une job dans Databricks, ou bien simplement avec l'aide d'une VIEW. Ces tables contiennent toutes les colonnes nécessaires afin de permettre au modèle de faire sa prédiction.
+Ensuite, les tables de la Consumption Zone peuvent être automatiquement créées par une job dans Databricks, ou bien simplement avec l'aide d'une VIEW. Ces tables contiennent toutes les colonnes nécessaires afin de permettre au modèle de faire sa prédiction.
 
 Puis, comme illustré plus bas dans l'étape 7, le modèle de recommendation créé par le data scientist doit être déployé sur un endpoint par un script.
-Une fois fait, alors une autre job dans Databricks peut automatiqument populer une table contenant les recommendations du modèle de machine learning.
+Une fois fait, alors une autre job dans Databricks peut automatiquement prendre le modèle, faire une query sur la table contenant les informations de l'historique des utilisateurs, et populer une autre table qui contiendrait les recommendations du modèle de machine learning.
 
 ### Étape 7
 
