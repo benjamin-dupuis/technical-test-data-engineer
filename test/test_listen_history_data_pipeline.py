@@ -56,7 +56,7 @@ class TestListenHistoryDataPipeline(TestCase):
 
             delta_table = pl.read_delta(self.listen_history_pipeline.data_path)
             self.assertEqual(list(delta_table.columns), self._listen_history_columns)
-            self.assertEqual(len(delta_table), 3)
+            self.assertEqual(len(delta_table), len(LISTEN_HISTORY_FAKE_RESPONSE["items"]))
 
     def test_adding_history_for_user(self) -> None:
         with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_response_mock:

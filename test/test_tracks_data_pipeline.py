@@ -54,7 +54,7 @@ TRACKS_FAKE_RESPONSE = {
 
 
 class TestTracksDataPipeline(TestCase):
-    _track_columns = list(TRACKS_FAKE_REPSONSE["items"][0].keys())  # type: ignore
+    _track_columns = list(TRACKS_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "tracks_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
 
@@ -71,7 +71,7 @@ class TestTracksDataPipeline(TestCase):
 
             delta_table = pl.read_delta(self.tracks_user_pipeline.data_path)
             self.assertEqual(list(delta_table.columns), self._track_columns)
-            self.assertEqual(len(delta_table), 3)
+            self.assertEqual(len(delta_table), len(TRACKS_FAKE_RESPONSE["items"]))
 
     def test_incremental_load(self) -> None:
         with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_api_response_mock:
