@@ -3,17 +3,15 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict
 
-import duckdb
 import polars as pl
 import requests  # type: ignore
 from deltalake import DeltaTable
 from polars import DataFrame
-import logging
 
 from src.data_pipeline.api_endpoints import APIEndpoints
 from src.data_pipeline.data_zone_config import DEFAULT_DATA_CONFIG, RawZoneConfig
-
 from src.data_pipeline.get_logger import logger
+
 
 class DataPipelineBase(ABC):
     def __init__(
@@ -83,9 +81,6 @@ class DataPipelineBase(ABC):
             except Exception as e:
                 logger.error(f"An error occurred when loading Raw data: {str(e)}")
 
-
-
-
     def _generate_dataframe_from_response(self, page: int) -> DataFrame:
         data = self._get_response_data_from_api(page)
         if data:
@@ -100,7 +95,6 @@ class DataPipelineBase(ABC):
             response = requests.get(endpoint_url)
             return response.json()
 
-
         except requests.exceptions.Timeout as timeout_error:
             logger.error(f"Timeout error occurred from server with URL '{endpoint_url}': {timeout_error}")
             return {}
@@ -110,7 +104,9 @@ class DataPipelineBase(ABC):
             return {}
 
         except requests.exceptions.RequestException as request_exception:
-            logger.error(f"A request exception error occurred from server with URL '{endpoint_url}': {request_exception}")
+            logger.error(
+                f"A request exception error occurred from server " f"with URL '{endpoint_url}': {request_exception}"
+            )
             return {}
 
         except Exception as error:

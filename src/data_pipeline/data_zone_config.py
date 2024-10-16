@@ -29,7 +29,7 @@ class DataZoneConfig:
             api_page_size=config_obj.get("api_page_size", DEFAULT_API_PAGE_SIZE),
             max_duration_s=config_obj.get("max_duration_s", DEFAULT_MAX_DURATION_S),
             zone_name=cls.zone_name,
-            database_name=cls.database_name
+            database_name=cls.database_name,
         )
 
     @property
