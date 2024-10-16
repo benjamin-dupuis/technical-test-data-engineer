@@ -43,8 +43,8 @@ class DataPipelineBase(ABC):
         )
 
     def write_to_delta_table(self, df: DataFrame) -> None:
+        logger.info(f"Writing to Delta table {self._table_name} at path {self.data_path}...")
         if not DeltaTable.is_deltatable(self.data_path):
-            print("Write to delta")
             df.write_delta(self.data_path)
         else:
             (
@@ -63,7 +63,7 @@ class DataPipelineBase(ABC):
             )
 
     def load_raw(self) -> None:
-        logger.info("Loading Raw data...")
+        logger.info(f"Loading Raw data...for {self._api_endpoint.value}")
         items_count = 0
         page = 1
         total_items = self._get_response_data_from_api(page).get("total")
@@ -72,7 +72,6 @@ class DataPipelineBase(ABC):
         if isinstance(total_items, int):
             try:
                 while True and items_count < total_items and time.time() < timeout:
-                    logger.info(f"Loading page {page} from API for {self._api_endpoint.value}...")
                     df: DataFrame = self._generate_dataframe_from_response(page)
                     fully_loaded_data = pl.concat([fully_loaded_data, df])
 
@@ -96,6 +95,7 @@ class DataPipelineBase(ABC):
 
     def _get_response_data_from_api(self, page: int) -> Dict[str, Any]:
         endpoint_url = self.get_endpoint_url(page)
+        logger.info(f"Loading page {page} from API at URL {endpoint_url} for {self._api_endpoint.value}...")
         try:
             response = requests.get(endpoint_url)
             return response.json()
