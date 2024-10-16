@@ -39,14 +39,14 @@ LISTEN_HISTORY_FAKE_RESPONSE = {
 
 
 class TestListenHistoryDataPipeline(TestCase):
-    _listen_history_columns = list(LISTEN_HISTORY_FAKE_RESPONSE["items"][0].keys())
+    _listen_history_columns = list(LISTEN_HISTORY_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "listen_history_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.listen_history_pipeline = ListenHistoryDataPipeline(self._dummy_table, self._data_config_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         delete_test_data(Path(self.listen_history_pipeline._raw_zone_config.base_data_path))
 
     def test_loading_into_delta_table(self) -> None:
@@ -79,7 +79,7 @@ class TestListenHistoryDataPipeline(TestCase):
 
     @staticmethod
     def _add_listen_history_for_user(user_id: int, item_id: int) -> Dict[str, Any]:
-        listen_history_fake_response = deepcopy(LISTEN_HISTORY_FAKE_RESPONSE)
+        listen_history_fake_response: Dict[str, Any] = deepcopy(LISTEN_HISTORY_FAKE_RESPONSE)
         for i, item in enumerate(listen_history_fake_response["items"]):
             if item["user_id"] == user_id:
                 listen_history_fake_response["items"][i]["items"].append(item_id)

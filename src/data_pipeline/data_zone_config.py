@@ -20,7 +20,7 @@ class DataZoneConfig:
     database_name: str
 
     @classmethod
-    def from_config_file(cls, config_file: Path):
+    def from_config_file(cls, config_file: Path) -> DataZoneConfig:
         with open(config_file, "r") as f:
             config_obj = json.load(f)
         return cls(

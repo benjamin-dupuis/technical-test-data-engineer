@@ -50,18 +50,17 @@ USERS_FAKE_RESPONSE = {
 }
 
 _data_config_path = Path(__file__).parent / "test_data_config.json"
-_users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())
 
 
 class TestUsersDataPipeline(TestCase):
-    _users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())
+    _users_columns = list(USERS_FAKE_RESPONSE["items"][0].keys())  # type: ignore
     _dummy_table = "users_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.users_pipeline = UsersDataPipeline(self._dummy_table, self._data_config_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         delete_test_data(Path(self.users_pipeline._raw_zone_config.base_data_path))
 
     def test_loading_into_delta_table(self) -> None:
@@ -91,7 +90,7 @@ class TestUsersDataPipeline(TestCase):
 
     @staticmethod
     def _add_user() -> Dict[str, Any]:
-        fake_user_response = deepcopy(USERS_FAKE_RESPONSE)
+        fake_user_response: Dict[str, Any] = deepcopy(USERS_FAKE_RESPONSE)
 
         new_user = {
             "id": 50488,

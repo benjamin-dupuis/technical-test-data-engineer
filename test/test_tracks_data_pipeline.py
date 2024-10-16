@@ -54,14 +54,14 @@ TRACKS_FAKE_REPSONSE = {
 
 
 class TestTracksDataPipeline(TestCase):
-    _track_columns = list(TRACKS_FAKE_REPSONSE["items"][0].keys())
+    _track_columns = list(TRACKS_FAKE_REPSONSE["items"][0].keys())  # type: ignore
     _dummy_table = "tracks_dummy_table"
     _data_config_path = Path(__file__).parent / "test_data_config.json"
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.tracks_user_pipeline = TracksDataPipeline(self._dummy_table, self._data_config_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         delete_test_data(Path(self.tracks_user_pipeline._raw_zone_config.base_data_path))
 
     def test_loading_into_delta_table(self) -> None:
@@ -89,7 +89,7 @@ class TestTracksDataPipeline(TestCase):
 
     @staticmethod
     def _add_track() -> Dict[str, Any]:
-        fake_tracks_response = deepcopy(TRACKS_FAKE_REPSONSE)
+        fake_tracks_response: Dict[str, Any] = deepcopy(TRACKS_FAKE_REPSONSE)
         new_track = {
             "id": 47199,
             "name": "degree",
