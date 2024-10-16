@@ -10,7 +10,7 @@ from src.data_pipeline.data_pipeline_base import DataPipelineBase
 from src.data_pipeline.tracks_data_pipeline import TracksDataPipeline
 from test.utils import delete_test_data
 
-TRACKS_FAKE_REPSONSE = {
+TRACKS_FAKE_RESPONSE = {
     "items": [
         {
             "id": 2108,
@@ -66,7 +66,7 @@ class TestTracksDataPipeline(TestCase):
 
     def test_loading_into_delta_table(self) -> None:
         with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_response_mock:
-            get_response_mock.return_value = TRACKS_FAKE_REPSONSE
+            get_response_mock.return_value = TRACKS_FAKE_RESPONSE
             self.tracks_user_pipeline.run()
 
             delta_table = pl.read_delta(self.tracks_user_pipeline.data_path)
@@ -75,7 +75,7 @@ class TestTracksDataPipeline(TestCase):
 
     def test_incremental_load(self) -> None:
         with patch.object(DataPipelineBase, "_get_response_data_from_api") as get_api_response_mock:
-            get_api_response_mock.return_value = TRACKS_FAKE_REPSONSE
+            get_api_response_mock.return_value = TRACKS_FAKE_RESPONSE
             self.tracks_user_pipeline.run()
 
             delta_table = pl.read_delta(self.tracks_user_pipeline.data_path)
@@ -89,7 +89,7 @@ class TestTracksDataPipeline(TestCase):
 
     @staticmethod
     def _add_track() -> Dict[str, Any]:
-        fake_tracks_response: Dict[str, Any] = deepcopy(TRACKS_FAKE_REPSONSE)
+        fake_tracks_response: Dict[str, Any] = deepcopy(TRACKS_FAKE_RESPONSE)
         new_track = {
             "id": 47199,
             "name": "degree",
